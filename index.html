@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Textly — Your dealership's AI that texts every lead back in seconds, over real iMessage</title>
+  <meta name="description" content="Textly is an AI-powered iMessage assistant for car dealerships. It texts every lead back in seconds from your business number, books test drives and service 24/7, and hands hot leads to your team — over real blue bubbles, grounded in your live inventory." />
+
+  <!-- Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind (CDN, configured inline) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+          colors: {
+            // Primary product accent — iMessage / royal blue → indigo
+            brand: {
+              50:'#eef4ff',100:'#dbe6ff',200:'#bccfff',300:'#8eabff',400:'#5b7cff',
+              500:'#2f6bff',600:'#1d52f0',700:'#1740cc',800:'#1736a3',900:'#193380'
+            },
+            // Secondary — deep dealership green (top banner + trust accents)
+            forest: { 700:'#234c3d', 800:'#1e3d32', 900:'#16302a' },
+            ink: { 950:'#070b16', 900:'#0a1020', 850:'#0d1426', 800:'#111a30' }
+          },
+          boxShadow: {
+            soft: '0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06)',
+            card: '0 1px 3px rgba(16,24,40,.06), 0 12px 32px rgba(16,24,40,.08)',
+            glow: '0 0 0 1px rgba(47,107,255,.25), 0 20px 60px -10px rgba(29,82,240,.45)'
+          },
+          borderRadius: { '4xl': '2rem' }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { -webkit-font-smoothing: antialiased; }
+
+    /* ===== iMessage bubble mockups ===== */
+    .bubble { max-width: 80%; padding: 9px 14px; border-radius: 20px; font-size: 14px; line-height: 1.35; position: relative; }
+    .bubble-in  { background:#e9e9eb; color:#111; border-bottom-left-radius:6px; align-self:flex-start; }
+    .bubble-out { background:linear-gradient(180deg,#3a8dff,#1d6dff); color:#fff; border-bottom-right-radius:6px; align-self:flex-end; }
+    .dark .bubble-in { background:#26262a; color:#e9e9ea; }
+
+    /* tiny typing dots */
+    .typing span { display:inline-block; width:6px; height:6px; margin:0 1px; border-radius:50%; background:#9aa0a6; animation:blink 1.2s infinite both; }
+    .typing span:nth-child(2){ animation-delay:.2s } .typing span:nth-child(3){ animation-delay:.4s }
+    @keyframes blink { 0%,80%,100%{opacity:.25;transform:translateY(0)} 40%{opacity:1;transform:translateY(-2px)} }
+
+    /* ===== scroll reveal ===== */
+    .reveal { opacity:0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+    .reveal.in { opacity:1; transform:none; }
+    @media (prefers-reduced-motion: reduce){ .reveal{opacity:1;transform:none;transition:none} html{scroll-behavior:auto} }
+
+    /* grid + glow backgrounds */
+    .grid-bg { background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 44px 44px; }
+    .radial-glow { background: radial-gradient(60% 60% at 50% 0%, rgba(47,107,255,.28), transparent 70%); }
+
+    /* animated bar growth */
+    @keyframes growbar { from { width:0 } }
+    .bar-fill { animation: growbar 1.1s cubic-bezier(.16,1,.3,1) both; }
+
+    /* marquee logos */
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .marquee { animation: marquee 28s linear infinite; }
+    .marquee:hover { animation-play-state: paused; }
+
+    .gradient-text { background:linear-gradient(92deg,#5b7cff,#2f6bff 40%,#7aa2ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+    /* ===== Dashboard "comes alive" animations ===== */
+    /* Bars grow via transition (re-triggered when the section scrolls in) instead of on load */
+    #dashboard .bar-fill { animation: none !important; transition: width 1.1s cubic-bezier(.16,1,.3,1), height 1.1s cubic-bezier(.16,1,.3,1); }
+    #dashboard:not(.dash-in) .bar-fill[style*="width:"]  { width: 0 !important; }
+    #dashboard:not(.dash-in) .bar-fill[style*="height:"] { height: 0 !important; }
+
+    /* KPI pills stagger in once the section is active */
+    #dashboard .kpi-pill { opacity: 0; transform: translateY(14px); transition: opacity .6s, transform .6s cubic-bezier(.16,1,.3,1); }
+    #dashboard.dash-in .kpi-pill { opacity: 1; transform: none; }
+    #dashboard.dash-in .kpi-pill:nth-child(1){ transition-delay:.15s }
+    #dashboard.dash-in .kpi-pill:nth-child(2){ transition-delay:.30s }
+    #dashboard.dash-in .kpi-pill:nth-child(3){ transition-delay:.45s }
+    #dashboard.dash-in .kpi-pill:nth-child(4){ transition-delay:.60s }
+    #dashboard.dash-in .kpi-pill:nth-child(5){ transition-delay:.75s }
+
+    /* Conversation bubbles: each pops in when JS adds .show */
+    #liveThread .chat-msg { opacity: 0; transform: translateY(8px) scale(.96); transition: opacity .35s, transform .35s cubic-bezier(.16,1,.3,1); }
+    #liveThread .chat-msg.show { opacity: 1; transform: none; }
+
+    /* Escalation feed: viewport fade mask + upward-scrolling track */
+    .feed-mask { -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
+                         mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent); }
+    @keyframes feedscroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+    .feed-track { animation: feedscroll 16s linear infinite; }
+    .feed-track:hover { animation-play-state: paused; }
+
+    @media (prefers-reduced-motion: reduce){
+      #dashboard .bar-fill, #dashboard .kpi-pill, #liveThread .chat-msg { transition: none !important; opacity: 1 !important; transform: none !important; }
+      .feed-track { animation: none !important; }
+    }
+
+    /* phone frame */
+    .phone { border-radius: 44px; }
+  </style>
+</head>
+
+<body class="font-sans text-slate-900 bg-white antialiased">
+
+  <!-- ========================================================= -->
+  <!-- TOP CALL BANNER (green) — call the live AI demo line       -->
+  <!-- ========================================================= -->
+  <div id="callbar" class="w-full bg-forest-800 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-center gap-3 py-2.5 text-[13px] sm:text-sm font-medium tracking-tight">
+        <span class="hidden sm:inline text-emerald-200/80">Talk to the AI yourself —</span>
+        <span class="inline-flex items-center gap-2">
+          <!-- phone icon -->
+          <svg class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <strong class="font-bold">Text or Call Our AI: <a href="tel:+12492095699" class="hover:underline">(249) 209-5699</a></strong>
+        </span>
+        <span class="hidden md:inline text-emerald-200/70">· It books a test drive while you watch.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- STICKY NAV                                                 -->
+  <!-- ========================================================= -->
+  <header id="nav" class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-slate-100 transition-shadow">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#top" class="flex items-center gap-2.5 font-extrabold text-lg tracking-tight">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-glow">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.9 3 3 6.6 3 11c0 2.3 1.1 4.3 2.9 5.7-.1 1-.6 2.3-1.6 3.3 1.7-.1 3.2-.6 4.4-1.5 1 .3 2.1.5 3.3.5 5.1 0 9-3.6 9-8s-3.9-8.5-9-8.5z"/></svg>
+        </span>
+        <span>Text<span class="text-brand-600">ly</span></span>
+      </a>
+      <!-- Links -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="#problem" class="hover:text-slate-900 transition">Why us</a>
+        <a href="#features" class="hover:text-slate-900 transition">Features</a>
+        <a href="#how" class="hover:text-slate-900 transition">How it works</a>
+        <a href="#dashboard" class="hover:text-slate-900 transition">Dashboard</a>
+        <a href="#pricing" class="hover:text-slate-900 transition">Pricing</a>
+        <a href="#faq" class="hover:text-slate-900 transition">FAQ</a>
+      </div>
+      <!-- CTAs -->
+      <div class="flex items-center gap-3">
+        <a href="#dashboard" class="hidden sm:inline text-sm font-semibold text-slate-700 hover:text-slate-900">See it in action</a>
+        <a href="book-demo.html" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 px-4 py-2.5 rounded-xl shadow-soft transition">
+          Book a demo
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <!-- mobile menu -->
+        <button id="menuBtn" class="md:hidden p-2 -mr-2 text-slate-700" aria-label="Menu">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </nav>
+    <!-- mobile drawer -->
+    <div id="mobileMenu" class="md:hidden hidden border-t border-slate-100 bg-white">
+      <div class="px-6 py-3 flex flex-col gap-1 text-sm font-medium text-slate-700">
+        <a href="#problem" class="py-2">Why us</a>
+        <a href="#features" class="py-2">Features</a>
+        <a href="#how" class="py-2">How it works</a>
+        <a href="#dashboard" class="py-2">Dashboard</a>
+        <a href="#pricing" class="py-2">Pricing</a>
+        <a href="#faq" class="py-2">FAQ</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+  <!-- ========================================================= -->
+  <!-- HERO (dark)                                                -->
+  <!-- ========================================================= -->
+  <section class="relative overflow-hidden bg-ink-950 text-white">
+    <div class="absolute inset-0 grid-bg opacity-40"></div>
+    <div class="absolute inset-0 radial-glow"></div>
+    <div class="absolute -top-24 -right-24 w-[36rem] h-[36rem] rounded-full bg-brand-600/20 blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-2 gap-12 items-center">
+      <!-- copy -->
+      <div class="reveal">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase text-brand-300 bg-brand-500/10 ring-1 ring-brand-400/20 px-3 py-1.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          AI iMessage for car dealerships
+        </span>
+        <h1 class="mt-5 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
+          Text every lead back in <span class="gradient-text">seconds</span> — over real iMessage.
+        </h1>
+        <p class="mt-5 text-lg text-slate-300 max-w-xl">
+          Textly is your dealership's AI assistant. It answers every inbound from your
+          business number with real blue bubbles, books test drives and service 24/7,
+          and hands the hot ones to your team — grounded only in your live inventory.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          <a href="book-demo.html" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-500 px-6 py-3.5 rounded-xl shadow-glow transition">
+            Book a demo
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="tel:+12492095699" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 px-6 py-3.5 rounded-xl transition">
+            <svg class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            See it in action — text or call the AI
+          </a>
+        </div>
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-400">
+          <span class="inline-flex items-center gap-2"><svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Your business number</span>
+          <span class="inline-flex items-center gap-2"><svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Live inventory only</span>
+          <span class="inline-flex items-center gap-2"><svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> STOP / quiet-hours compliant</span>
+        </div>
+      </div>
+
+      <!-- iMessage phone mockup -->
+      <div class="reveal relative flex justify-center lg:justify-end">
+        <div class="absolute inset-0 bg-brand-500/20 blur-3xl rounded-full"></div>
+        <div class="dark relative w-[300px] sm:w-[330px] bg-[#0c0c0e] phone ring-1 ring-white/10 shadow-2xl p-3">
+          <!-- notch -->
+          <div class="mx-auto mb-2 h-6 w-32 rounded-b-2xl bg-black"></div>
+          <!-- contact header -->
+          <div class="flex flex-col items-center pb-3 border-b border-white/10">
+            <div class="w-11 h-11 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center text-white font-bold">MH</div>
+            <div class="mt-1.5 text-white text-sm font-semibold">Maple Honda</div>
+            <div class="text-[11px] text-slate-400">iMessage · business line</div>
+          </div>
+          <!-- conversation -->
+          <div class="flex flex-col gap-2 py-4 px-1 min-h-[330px]">
+            <div class="text-center text-[10px] text-slate-500 mb-1">Today 7:42 PM</div>
+            <div class="bubble bubble-in">Hi, is the 2024 CR-V Sport still available? Saw it online</div>
+            <div class="bubble bubble-out">Hey! Yes — the CR-V Sport in Still Night Pearl is on the lot. 👋</div>
+            <div class="bubble bubble-out">It's $34,180 with 12 mi. Want to come take it for a spin?</div>
+            <div class="bubble bubble-in">Maybe tomorrow evening? After 6</div>
+            <div class="bubble bubble-out">Perfect. I've got 6:30 PM open tomorrow with Marcus. Booked you in ✅</div>
+            <div class="bubble bubble-out">Want me to text you the address + have it pulled up front?</div>
+            <div class="self-start mt-1 px-3 py-2 rounded-2xl bg-[#26262a]">
+              <span class="typing"><span></span><span></span><span></span></span>
+            </div>
+          </div>
+          <!-- input -->
+          <div class="flex items-center gap-2 border-t border-white/10 pt-3 px-1">
+            <div class="flex-1 h-8 rounded-full bg-white/5 ring-1 ring-white/10 px-3 flex items-center text-[12px] text-slate-500">iMessage</div>
+            <div class="w-8 h-8 rounded-full bg-brand-600 grid place-items-center text-white">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </div>
+          </div>
+          <!-- floating booked pill -->
+          <div class="absolute -left-6 top-1/3 hidden sm:flex items-center gap-2 bg-white text-slate-900 text-xs font-semibold px-3 py-2 rounded-xl shadow-card">
+            <span class="w-7 h-7 grid place-items-center rounded-lg bg-emerald-100 text-emerald-700">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            Test drive booked<br><span class="text-slate-400 font-medium">in 38 seconds</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- stat ribbon -->
+    <div class="relative border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-7 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center lg:text-left">
+        <div class="reveal"><div class="text-3xl font-extrabold">8&nbsp;sec</div><div class="text-sm text-slate-400">median first reply</div></div>
+        <div class="reveal"><div class="text-3xl font-extrabold">24/7</div><div class="text-sm text-slate-400">nights, weekends, holidays</div></div>
+        <div class="reveal"><div class="text-3xl font-extrabold">3.2×</div><div class="text-sm text-slate-400">more appointments booked</div></div>
+        <div class="reveal"><div class="text-3xl font-extrabold">98%</div><div class="text-sm text-slate-400">texts get read</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- LOGO / TRUST STRIP                                          -->
+  <!-- ========================================================= -->
+  <section class="bg-white border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <p class="text-center text-xs font-semibold uppercase tracking-widest text-slate-400">Trusted by single rooftops and dealer groups</p>
+      <div class="mt-6 overflow-hidden">
+        <div class="flex w-max marquee gap-12 items-center opacity-60">
+          <!-- placeholder wordmark logos x2 for seamless loop -->
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Maple&nbsp;Honda</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Summit&nbsp;Auto&nbsp;Group</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Lakeside&nbsp;Ford</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Crown&nbsp;Toyota</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Northgate&nbsp;Kia</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Velocity&nbsp;Mazda</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Maple&nbsp;Honda</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Summit&nbsp;Auto&nbsp;Group</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Lakeside&nbsp;Ford</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Crown&nbsp;Toyota</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Northgate&nbsp;Kia</span>
+          <span class="text-xl font-extrabold text-slate-400 tracking-tight">Velocity&nbsp;Mazda</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- PROBLEM — "Unknown Caller Isn't a Business Strategy"       -->
+  <!-- (mirrors reference image 1)                                -->
+  <!-- ========================================================= -->
+  <section id="problem" class="bg-white py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-3xl mx-auto reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">The hidden cost of "just text from your cell"</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">"Unknown Caller" isn't a business strategy.</h2>
+        <p class="mt-4 text-lg text-slate-500">Leads go cold in minutes. Your best follow-up tool is the one in everyone's pocket — used the wrong way, it costs you deals.</p>
+      </div>
+
+      <div class="mt-14 grid lg:grid-cols-3 gap-8 lg:gap-10 items-center">
+        <!-- left: the problem -->
+        <div class="reveal">
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">The problem</p>
+          <h3 class="mt-2 text-xl font-bold leading-snug">Your team is in the field. A lead just came in. What number do you use?</h3>
+          <ul class="mt-6 space-y-5 text-slate-600">
+            <li><span class="font-semibold text-slate-900">Their personal cell?</span> Customers save it. The contact walks out the door the day that rep quits.</li>
+            <li><span class="font-semibold text-slate-900">A call from an unknown number?</span> Most won't answer. The rest assume it's spam.</li>
+            <li><span class="font-semibold text-slate-900">Wait until morning?</span> Speed-to-lead is everything. After 5 minutes the lead is ice cold — and already texting your competitor.</li>
+          </ul>
+        </div>
+
+        <!-- center: dialpad / number mockup (green accent, like ref 1) -->
+        <div class="reveal flex justify-center">
+          <div class="w-[280px] rounded-3xl bg-white ring-1 ring-slate-200 shadow-card overflow-hidden">
+            <div class="bg-forest-800 text-white px-4 py-3 flex items-center justify-between">
+              <span class="inline-flex items-center gap-2 text-sm font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Ready</span>
+              <svg class="w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="px-4 py-4">
+              <div class="flex gap-4 text-[11px] font-semibold text-slate-400 border-b border-slate-100 pb-2">
+                <span class="text-forest-800">Dialpad</span><span>Recent</span><span>Team</span><span>SMS</span>
+              </div>
+              <div class="mt-3 mb-2 text-center">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Calling as</p>
+                <p class="text-sm font-bold text-slate-800">Maple Honda <span class="text-slate-400 font-medium">(905) 555-7890</span></p>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mt-3">
+                <!-- keypad -->
+                <div class="dp">1</div><div class="dp">2<small>ABC</small></div><div class="dp">3<small>DEF</small></div>
+                <div class="dp">4<small>GHI</small></div><div class="dp">5<small>JKL</small></div><div class="dp">6<small>MNO</small></div>
+                <div class="dp">7<small>PQRS</small></div><div class="dp">8<small>TUV</small></div><div class="dp">9<small>WXYZ</small></div>
+                <div class="dp">*</div><div class="dp">0<small>+</small></div><div class="dp">#</div>
+              </div>
+              <div class="mt-4 flex justify-center">
+                <div class="w-12 h-12 rounded-full bg-emerald-500 grid place-items-center text-white shadow-lg">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.2 1l-2.3 2.2z"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right: the solution -->
+        <div class="reveal">
+          <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">The Textly solution</p>
+          <h3 class="mt-2 text-xl font-bold leading-snug">One business number that texts, books, and never leaves.</h3>
+          <ul class="mt-6 space-y-4">
+            <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-5 h-5 grid place-items-center rounded-full bg-brand-100 text-brand-700"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span class="text-slate-700"><b>Customers see your dealership name</b> — not "Unknown Caller."</span></li>
+            <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-5 h-5 grid place-items-center rounded-full bg-brand-100 text-brand-700"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span class="text-slate-700"><b>Replies land in seconds</b>, day or night, in real iMessage.</span></li>
+            <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-5 h-5 grid place-items-center rounded-full bg-brand-100 text-brand-700"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span class="text-slate-700"><b>Every conversation stays with the store</b> — reps come and go, the contact doesn't.</span></li>
+            <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-5 h-5 grid place-items-center rounded-full bg-brand-100 text-brand-700"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span class="text-slate-700"><b>Personal numbers stay personal.</b> Reps stay invisible behind the brand.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- FEATURES (the 9)                                           -->
+  <!-- ========================================================= -->
+  <section id="features" class="bg-slate-50 py-20 lg:py-28 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Everything your BDC wishes it could do</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">An AI teammate that never sleeps, never forgets, never goes off-script.</h2>
+      </div>
+
+      <!-- Feature 1 — big hero card: AI texting over real iMessage -->
+      <div class="mt-14 grid lg:grid-cols-2 gap-6">
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-card p-8 lg:p-10 flex flex-col">
+          <span class="text-xs font-bold uppercase tracking-widest text-brand-600">01 · Real iMessage</span>
+          <h3 class="mt-3 text-2xl font-bold tracking-tight">Answers anything, instantly — in real blue bubbles.</h3>
+          <p class="mt-3 text-slate-600">Inventory, financing, trade-ins, service, parts and hours — answered in seconds, 24/7. Grounded only in your live feed, so it <b>never invents a car or a price.</b> Replies split into natural short bubbles in your store's voice.</p>
+          <!-- mini imessage -->
+          <div class="mt-6 rounded-2xl bg-slate-50 ring-1 ring-slate-100 p-4 flex flex-col gap-2">
+            <div class="bubble bubble-in">do you have anything AWD under 30k?</div>
+            <div class="bubble bubble-out">We've got 3 right now 👇</div>
+            <div class="bubble bubble-out">'22 CX-5 AWD — $27,9k · '21 RAV4 LE AWD — $28,4k · '23 Forester — $29,8k. Want pics?</div>
+            <div class="bubble bubble-in">the RAV4. financing options?</div>
+            <div class="bubble bubble-out">Yep — as low as 4.9% OAC. I can get you pre-qualified in 2 min, no impact to credit. Start?</div>
+          </div>
+        </div>
+
+        <!-- Feature 2 + 3 stacked -->
+        <div class="grid gap-6">
+          <div class="reveal rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-white p-8 shadow-card relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
+            <span class="text-xs font-bold uppercase tracking-widest text-brand-200">02 · Speed-to-lead</span>
+            <h3 class="mt-3 text-2xl font-bold tracking-tight">Every inbound answered in seconds.</h3>
+            <p class="mt-3 text-brand-100">Web leads, Marketplace, Autotrader, missed calls, a text to the main line — all get an instant, on-brand reply before the customer cools off or messages the next dealer.</p>
+            <div class="mt-5 flex items-end gap-3">
+              <div class="text-4xl font-extrabold">8s</div>
+              <div class="text-sm text-brand-200 mb-1">median first response vs. the 8-hour industry average</div>
+            </div>
+          </div>
+          <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-card p-8">
+            <span class="text-xs font-bold uppercase tracking-widest text-brand-600">03 · Books the appointment</span>
+            <h3 class="mt-3 text-2xl font-bold tracking-tight">Turns "just looking" into a time on the calendar.</h3>
+            <p class="mt-3 text-slate-600">Captures test drives, service appointments and showroom visits, confirms them, sends reminders, and pushes everything to your team and CRM automatically.</p>
+            <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">🚗 Test drive · Sat 11:00</span>
+              <span class="px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100">🔧 Service · Tue 8:30</span>
+              <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-100">📋 Appraisal · Thu 4:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features 4–9 grid -->
+      <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- 4 human takeover -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">04 · Human takeover</span>
+          <h3 class="mt-1 text-lg font-bold">Reps jump in the moment it matters.</h3>
+          <p class="mt-2 text-sm text-slate-600">A rep takes over any thread from the dashboard and texts as the dealership — or gets dropped into a real iMessage group with the customer. The AI auto-pauses the instant a human steps in.</p>
+        </div>
+
+        <!-- 5 outbound -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">05 · Outbound campaigns</span>
+          <h3 class="mt-1 text-lg font-bold">Reactivate your whole database overnight.</h3>
+          <p class="mt-2 text-sm text-slate-600">Drop in a list of past customers. The AI sends personalized openers ("hey Chris, how's the CR-V?"), follows with the right offer, and handles every reply — throttled and compliant.</p>
+        </div>
+
+        <!-- 6 reviews -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.9 21l1.2-6.8-5-4.9 6.9-1z"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">06 · Reviews &amp; referrals</span>
+          <h3 class="mt-1 text-lg font-bold">More 5-star reviews, on autopilot.</h3>
+          <p class="mt-2 text-sm text-slate-600">After every visit, the AI texts a one-tap Google review request and asks for referrals. More reviews → more inbound → more sales — a flywheel that runs itself.</p>
+        </div>
+
+        <!-- 7 stock alerts -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 19a2 2 0 1 0 4 0M16 19a2 2 0 1 0 4 0M3 5h2l2.5 11.5A2 2 0 0 0 9.5 18h7a2 2 0 0 0 2-1.6L21 8H6"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">07 · Stock alerts</span>
+          <h3 class="mt-1 text-lg font-bold">"The truck you wanted just landed."</h3>
+          <p class="mt-2 text-sm text-slate-600">When a vehicle matching what a customer asked for hits your inventory, the AI texts them first — turning aged-out leads into walk-ins.</p>
+        </div>
+
+        <!-- 8 analytics -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 2 4-6"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">08 · Live manager board</span>
+          <h3 class="mt-1 text-lg font-bold">Watch every conversation in real time.</h3>
+          <p class="mt-2 text-sm text-slate-600">See who the AI is handling and who a rep took over, with charts for appointments, leads, conversion rate, activity by hour and AI-vs-human handled. <a href="#dashboard" class="text-brand-600 font-semibold">See it ↓</a></p>
+        </div>
+
+        <!-- 9 number & branding -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-7 hover:shadow-card transition">
+          <div class="w-11 h-11 rounded-2xl bg-forest-800 text-emerald-300 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>
+          </div>
+          <span class="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-400">09 · Your number, your brand</span>
+          <h3 class="mt-1 text-lg font-bold">Every store gets its own line.</h3>
+          <p class="mt-2 text-sm text-slate-600">Each rooftop gets a dedicated number that shows your dealership name on the customer's phone — not "unknown." Branded, recognizable, and built to be answered.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- "You're not spam" — dark section (mirrors reference image 2)-->
+  <!-- ========================================================= -->
+  <section class="relative bg-ink-950 text-white py-20 lg:py-28 overflow-hidden">
+    <!-- faint code background -->
+    <pre class="absolute inset-0 m-0 p-8 text-[11px] leading-5 text-slate-500/15 font-mono select-none overflow-hidden">
+# Check live inventory before replying
+curl -X GET https://api.textly.ca/v1/inventory \
+  -H "Authorization: Bearer $DEALER_KEY" \
+  -d '{ "query": "AWD SUV under 30000", "rooftop": "maple-honda" }'
+
+# Detect engagement, then send natural bubbles
+curl -X POST https://api.textly.ca/v1/messages \
+  -H "Authorization: Bearer $DEALER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "to": "+19055557890", "channel": "imessage",
+        "split_bubbles": true, "typing_indicator": true }'
+    </pre>
+    <div class="absolute inset-0 bg-gradient-to-b from-ink-950/60 via-ink-950/80 to-ink-950"></div>
+
+    <div class="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
+      <h2 class="reveal text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">You're not spam — so don't come across that way.</h2>
+
+      <div class="reveal mt-12 flex justify-center">
+        <div class="dark w-[300px] bg-[#0c0c0e] phone ring-1 ring-white/10 shadow-2xl p-3">
+          <div class="mx-auto mb-2 h-6 w-32 rounded-b-2xl bg-black"></div>
+          <div class="flex flex-col items-center pb-3 border-b border-white/10">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center text-white text-sm font-bold">SA</div>
+            <div class="mt-1 text-white text-sm font-semibold">Summit Auto</div>
+          </div>
+          <div class="flex flex-col gap-2 py-4 px-1 min-h-[230px]">
+            <div class="bubble bubble-in">Hey Alex — noticed you were checking out the Bronco. Still on the hunt?</div>
+            <div class="bubble bubble-out">Ha yeah I am. Are you a real person or a bot?</div>
+            <div class="bubble bubble-in">Bit of both 😄 I'm Summit's assistant — I can pull live pricing and book you in with a real advisor anytime. Want to see what just landed?</div>
+            <div class="self-start px-3 py-2 rounded-2xl bg-[#26262a]"><span class="typing"><span></span><span></span><span></span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="reveal mt-10 text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+        Textly reads when a lead is actually engaged, sends <b class="text-white">real typing indicators</b>,
+        and breaks replies into <b class="text-white">natural, human bubbles</b> — never a wall of templated text.
+        Conversations that feel real are conversations that <b class="text-white">convert</b>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- HOW IT WORKS — 3 steps                                     -->
+  <!-- ========================================================= -->
+  <section id="how" class="bg-white py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">How it works</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Live in days, not quarters.</h2>
+        <p class="mt-4 text-lg text-slate-500">No rip-and-replace. Textly sits on top of the tools you already run.</p>
+      </div>
+
+      <div class="mt-14 grid lg:grid-cols-3 gap-8 relative">
+        <!-- connecting line -->
+        <div class="hidden lg:block absolute top-12 left-[16%] right-[16%] h-px bg-gradient-to-r from-brand-200 via-brand-300 to-brand-200"></div>
+
+        <div class="reveal relative">
+          <div class="w-24 h-24 mx-auto rounded-3xl bg-brand-50 ring-1 ring-brand-100 grid place-items-center relative z-10">
+            <span class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-brand-600 text-white text-sm font-bold grid place-items-center shadow-soft">1</span>
+            <svg class="w-10 h-10 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-center">Connect your number &amp; inventory</h3>
+          <p class="mt-2 text-slate-600 text-center">We provision your branded business line and sync your live inventory feed and CRM. White-glove setup — you do almost nothing.</p>
+        </div>
+
+        <div class="reveal relative">
+          <div class="w-24 h-24 mx-auto rounded-3xl bg-brand-50 ring-1 ring-brand-100 grid place-items-center relative z-10">
+            <span class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-brand-600 text-white text-sm font-bold grid place-items-center shadow-soft">2</span>
+            <svg class="w-10 h-10 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-center">AI texts &amp; books your leads</h3>
+          <p class="mt-2 text-slate-600 text-center">Every inbound and outbound conversation is handled in seconds, 24/7 — answering questions and filling your calendar with test drives and service.</p>
+        </div>
+
+        <div class="reveal relative">
+          <div class="w-24 h-24 mx-auto rounded-3xl bg-brand-50 ring-1 ring-brand-100 grid place-items-center relative z-10">
+            <span class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-brand-600 text-white text-sm font-bold grid place-items-center shadow-soft">3</span>
+            <svg class="w-10 h-10 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 15 2 2 4-4M7.5 4.2 12 2l4.5 2.2L21 6v6c0 5-3.8 8.4-9 10-5.2-1.6-9-5-9-10V6z"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-center">Reps take over the hot ones</h3>
+          <p class="mt-2 text-slate-600 text-center">When a lead is ready to buy, the AI escalates and a rep steps in — by relay or real iMessage group. Humans close; the AI handles the rest.</p>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center reveal">
+        <a href="book-demo.html" class="inline-flex items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-700 px-6 py-3.5 rounded-xl shadow-soft transition">
+          Book a demo <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- DASHBOARD — "Every call, text & follow-up. In one view."   -->
+  <!-- (mirrors reference image 3)                                -->
+  <!-- ========================================================= -->
+  <section id="dashboard" class="bg-slate-50 py-20 lg:py-28 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="max-w-3xl reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Live manager board + analytics</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Every call, text, and follow-up. In one view.</h2>
+        <p class="mt-4 text-lg text-slate-500">Stop guessing what your BDC did today. Watch the AI work, see what's converting, and jump into any conversation live.</p>
+      </div>
+
+      <!-- top row: live convo + campaign + KPI pills -->
+      <div class="mt-12 grid lg:grid-cols-12 gap-6">
+
+        <!-- live conversation card -->
+        <div class="reveal lg:col-span-3 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Live thread</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> AI handling</span>
+          </div>
+          <div id="liveThread" class="flex flex-col gap-2 min-h-[190px]">
+            <div class="chat-msg bubble bubble-in" style="font-size:12.5px">I'll wait if it's not too long</div>
+            <div class="chat-msg bubble bubble-out" style="font-size:12.5px">Usually about 45 min. Wednesday 10am or Thursday 3pm?</div>
+            <div class="chat-msg bubble bubble-in" style="font-size:12.5px">Wednesday works perfectly</div>
+            <div class="chat-msg bubble bubble-out" style="font-size:12.5px">All set! Wed 10am brake inspection for your Accord. Reminder the morning of 👍</div>
+            <!-- typing indicator, shown by JS between messages -->
+            <div id="liveTyping" class="self-start px-3 py-2 rounded-2xl bg-slate-100 hidden"><span class="typing"><span></span><span></span><span></span></span></div>
+          </div>
+        </div>
+
+        <!-- campaign progress -->
+        <div class="reveal lg:col-span-6 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-6 flex flex-col">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>
+              <h3 class="mt-1 text-lg font-bold">Year-End Blowout Campaign</h3>
+              <p class="text-xs text-slate-400">Created Jan 30</p>
+            </div>
+            <span class="cu text-2xl font-extrabold text-slate-800" data-count="86" data-suffix="%">0%</span>
+          </div>
+          <div class="mt-5 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700" style="width:86%"></div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div><span class="cu text-2xl font-extrabold text-slate-800" data-count="530">0</span><span class="text-slate-400 font-medium">/621 leads</span></div>
+            <div class="text-right"><span class="cu text-2xl font-extrabold text-slate-800" data-count="997">0</span> <span class="text-slate-400 font-medium">dials</span></div>
+          </div>
+          <div class="mt-5 pt-5 border-t border-slate-100 grid grid-cols-3 gap-3 text-center">
+            <div><div class="cu text-xl font-extrabold text-brand-600" data-count="41">0</div><div class="text-[11px] text-slate-500">replied</div></div>
+            <div><div class="cu text-xl font-extrabold text-brand-600" data-count="23">0</div><div class="text-[11px] text-slate-500">booked</div></div>
+            <div><div class="cu text-xl font-extrabold text-brand-600" data-count="6">0</div><div class="text-[11px] text-slate-500">sold</div></div>
+          </div>
+        </div>
+
+        <!-- KPI pills -->
+        <div class="reveal lg:col-span-3 flex flex-col gap-3 justify-center">
+          <div class="kpi-pill flex items-center gap-3 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft px-4 py-3"><span class="cu w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center text-sm font-bold" data-count="35">0</span><span class="text-sm font-semibold text-slate-700">Appointments booked</span></div>
+          <div class="kpi-pill flex items-center gap-3 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft px-4 py-3"><span class="cu w-9 h-9 rounded-xl bg-rose-500 text-white grid place-items-center text-sm font-bold" data-count="19">0</span><span class="text-sm font-semibold text-slate-700">Hot leads</span></div>
+          <div class="kpi-pill flex items-center gap-3 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft px-4 py-3"><span class="cu w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center text-sm font-bold" data-count="48">0</span><span class="text-sm font-semibold text-slate-700">Callbacks requested</span></div>
+          <div class="kpi-pill flex items-center gap-3 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft px-4 py-3"><span class="cu w-9 h-9 rounded-xl bg-emerald-500 text-white grid place-items-center text-sm font-bold" data-count="77">0</span><span class="text-sm font-semibold text-slate-700">Texts sent</span></div>
+          <div class="kpi-pill flex items-center gap-3 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft px-4 py-3"><span class="cu w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center text-sm font-bold" data-count="37">0</span><span class="text-sm font-semibold text-slate-700">Leads qualified</span></div>
+        </div>
+      </div>
+
+      <!-- bottom row: analytics board + handoff list -->
+      <div class="mt-6 grid lg:grid-cols-12 gap-6">
+
+        <!-- analytics board -->
+        <div class="reveal lg:col-span-8 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-bold text-slate-800">Activity</h3>
+            <div class="flex gap-1 text-[11px] font-semibold">
+              <span class="px-2.5 py-1 rounded-lg text-slate-500">Last 24h</span>
+              <span class="px-2.5 py-1 rounded-lg text-slate-500">Week</span>
+              <span class="px-2.5 py-1 rounded-lg text-slate-500">Month</span>
+              <span class="px-2.5 py-1 rounded-lg bg-brand-600 text-white">All time</span>
+            </div>
+          </div>
+
+          <!-- three count cards -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="text-xs text-slate-400 font-semibold">Service appts</div><div class="cu mt-1 text-2xl font-extrabold text-slate-800" data-count="109">0</div><div class="text-[11px] text-slate-400">92 scheduled · 13 resched · 4 canceled</div></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="text-xs text-slate-400 font-semibold">Sales appts</div><div class="cu mt-1 text-2xl font-extrabold text-slate-800" data-count="14">0</div><div class="text-[11px] text-slate-400">leads booked</div></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="text-xs text-slate-400 font-semibold">Parts orders</div><div class="cu mt-1 text-2xl font-extrabold text-slate-800" data-count="28">0</div><div class="text-[11px] text-slate-400">requested</div></div>
+          </div>
+
+          <!-- three bar groups -->
+          <div class="grid sm:grid-cols-3 gap-6">
+            <!-- by department -->
+            <div>
+              <div class="text-xs font-bold text-slate-500 mb-3">Calls by department</div>
+              <div class="space-y-2.5 text-[11px]">
+                <div class="flex items-center gap-2"><span class="w-12 text-slate-500">General</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-brand-500" style="width:95%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="333">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-12 text-slate-500">Service</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-brand-500" style="width:66%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="222">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-12 text-slate-500">Sales</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-brand-500" style="width:44%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="147">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-12 text-slate-500">Parts</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-brand-500" style="width:20%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="69">0</span></div>
+              </div>
+            </div>
+            <!-- action types -->
+            <div>
+              <div class="text-xs font-bold text-slate-500 mb-3">Action types</div>
+              <div class="space-y-2.5 text-[11px]">
+                <div class="flex items-center gap-2"><span class="w-14 text-slate-500">Transfer</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-emerald-500" style="width:90%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="248">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-14 text-slate-500">Message</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-emerald-500" style="width:65%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="179">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-14 text-slate-500">Scheduled</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-emerald-500" style="width:40%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="112">0</span></div>
+                <div class="flex items-center gap-2"><span class="w-14 text-slate-500">Updated</span><div class="flex-1 h-2 rounded bg-slate-100"><div class="bar-fill h-full rounded bg-emerald-500" style="width:18%"></div></div><span class="cu w-6 text-right font-semibold text-slate-600" data-count="49">0</span></div>
+              </div>
+            </div>
+            <!-- volume by hour -->
+            <div>
+              <div class="text-xs font-bold text-slate-500 mb-3">Volume by hour</div>
+              <div class="flex items-end gap-1.5 h-[88px]">
+                <div class="flex-1 rounded-t bg-brand-200 bar-fill" style="height:30%"></div>
+                <div class="flex-1 rounded-t bg-brand-300 bar-fill" style="height:52%"></div>
+                <div class="flex-1 rounded-t bg-brand-400 bar-fill" style="height:70%"></div>
+                <div class="flex-1 rounded-t bg-brand-600 bar-fill" style="height:100%"></div>
+                <div class="flex-1 rounded-t bg-brand-500 bar-fill" style="height:84%"></div>
+                <div class="flex-1 rounded-t bg-brand-400 bar-fill" style="height:60%"></div>
+                <div class="flex-1 rounded-t bg-brand-300 bar-fill" style="height:42%"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400 mt-1.5"><span>8a</span><span>11a</span><span>2p</span><span>6p</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right: AI↔human handoff + donut -->
+        <div class="reveal lg:col-span-4 flex flex-col gap-6">
+          <!-- donut: AI vs human -->
+          <div class="rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-6">
+            <h3 class="font-bold text-slate-800 mb-4">AI vs. human handled</h3>
+            <div class="flex items-center gap-5">
+              <svg viewBox="0 0 36 36" class="w-24 h-24 -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+                <circle id="donutArc" cx="18" cy="18" r="15.9" fill="none" stroke="#1d52f0" stroke-width="4" stroke-dasharray="0 100" stroke-linecap="round" style="transition:stroke-dasharray 1.3s cubic-bezier(.16,1,.3,1)"/>
+              </svg>
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-brand-600"></span> <b><span class="cu" data-count="82" data-suffix="%">0%</span></b> <span class="text-slate-500">AI resolved</span></div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-slate-200"></span> <b><span class="cu" data-count="18" data-suffix="%">0%</span></b> <span class="text-slate-500">Rep takeover</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- handoff list — auto-scrolling live feed -->
+          <div class="rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5 flex-1">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-slate-800 text-sm">Escalated to a rep</h3>
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> live</span>
+            </div>
+            <!-- viewport with fade mask; inner track scrolls upward and loops -->
+            <div class="feed-mask h-[168px] overflow-hidden">
+              <div class="feed-track space-y-2.5">
+                <!-- rows (duplicated below for a seamless loop) -->
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">Michael Torres</div><div class="text-[11px] text-slate-400">(905) 887-4413</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">Finance assist</span></div>
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">Rachel Adams</div><div class="text-[11px] text-slate-400">(289) 220-8656</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700">Service appt</span></div>
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">Tom Bradley</div><div class="text-[11px] text-slate-400">(716) 882-3361</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">Sales transfer</span></div>
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">Sophie Laurent</div><div class="text-[11px] text-slate-400">(647) 555-1180</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">Ready to buy</span></div>
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">Anna Novak</div><div class="text-[11px] text-slate-400">(617) 338-1249</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700">Sales follow-up</span></div>
+                <div class="flex items-center justify-between"><div><div class="text-sm font-semibold text-slate-700">James Wilson</div><div class="text-[11px] text-slate-400">(832) 491-7705</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">Service warranty</span></div>
+                <!-- duplicate set for the seamless loop -->
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">Michael Torres</div><div class="text-[11px] text-slate-400">(905) 887-4413</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">Finance assist</span></div>
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">Rachel Adams</div><div class="text-[11px] text-slate-400">(289) 220-8656</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700">Service appt</span></div>
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">Tom Bradley</div><div class="text-[11px] text-slate-400">(716) 882-3361</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">Sales transfer</span></div>
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">Sophie Laurent</div><div class="text-[11px] text-slate-400">(647) 555-1180</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">Ready to buy</span></div>
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">Anna Novak</div><div class="text-[11px] text-slate-400">(617) 338-1249</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700">Sales follow-up</span></div>
+                <div class="flex items-center justify-between" aria-hidden="true"><div><div class="text-sm font-semibold text-slate-700">James Wilson</div><div class="text-[11px] text-slate-400">(832) 491-7705</div></div><span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">Service warranty</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- RESULTS BAND + TESTIMONIALS                                -->
+  <!-- ========================================================= -->
+  <section class="bg-ink-950 text-white py-20 lg:py-24 relative overflow-hidden">
+    <div class="absolute inset-0 radial-glow opacity-70"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="grid sm:grid-cols-3 gap-8 text-center reveal">
+        <div><div class="text-5xl font-extrabold gradient-text">8 sec</div><p class="mt-2 text-slate-400">median response time, day or night</p></div>
+        <div><div class="text-5xl font-extrabold gradient-text">+41%</div><p class="mt-2 text-slate-400">more appointments booked in 90 days</p></div>
+        <div><div class="text-5xl font-extrabold gradient-text">$0</div><p class="mt-2 text-slate-400">leads lost to "no one replied"</p></div>
+      </div>
+
+      <div class="mt-16 grid md:grid-cols-3 gap-6">
+        <figure class="reveal rounded-3xl bg-white/5 ring-1 ring-white/10 p-7">
+          <div class="flex gap-0.5 text-amber-400 mb-3">★★★★★</div>
+          <blockquote class="text-slate-200">"We were losing weekend leads to slower stores. Now every one gets answered in seconds and shows up Monday already booked. It paid for itself the first month."</blockquote>
+          <figcaption class="mt-5 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-700"></span><span><span class="block text-sm font-semibold">Dana R.</span><span class="block text-xs text-slate-400">GM, Lakeside Ford</span></span></figcaption>
+        </figure>
+        <figure class="reveal rounded-3xl bg-white/5 ring-1 ring-white/10 p-7">
+          <div class="flex gap-0.5 text-amber-400 mb-3">★★★★★</div>
+          <blockquote class="text-slate-200">"My BDC stopped drowning in cold follow-up. The AI handles the noise and hands my closers only the people who are ready. Conversion is up and so is morale."</blockquote>
+          <figcaption class="mt-5 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-700"></span><span><span class="block text-sm font-semibold">Marcus B.</span><span class="block text-xs text-slate-400">BDC Manager, Summit Auto Group</span></span></figcaption>
+        </figure>
+        <figure class="reveal rounded-3xl bg-white/5 ring-1 ring-white/10 p-7">
+          <div class="flex gap-0.5 text-amber-400 mb-3">★★★★★</div>
+          <blockquote class="text-slate-200">"The reactivation campaign pulled 11 deals out of a dead database in three weeks. Blue bubbles from our own number — customers actually reply."</blockquote>
+          <figcaption class="mt-5 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-700"></span><span><span class="block text-sm font-semibold">Priya N.</span><span class="block text-xs text-slate-400">Dealer Principal, Crown Toyota</span></span></figcaption>
+        </figure>
+      </div>
+      <p class="mt-6 text-center text-xs text-slate-500 reveal">Results and quotes are illustrative placeholders for layout. Swap in your real numbers and testimonials before launch.</p>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- PRICING                                                    -->
+  <!-- ========================================================= -->
+  <section id="pricing" class="bg-white py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Pricing</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Flat monthly. Per rooftop. No surprises.</h2>
+        <p class="mt-4 text-lg text-slate-500">One price per store — unlimited reps, unlimited conversations, setup included. No per-message games, no free-trial signups. Just a demo and a go-live.</p>
+      </div>
+
+      <div class="mt-14 grid lg:grid-cols-3 gap-6 items-stretch">
+        <!-- Single rooftop -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-8 flex flex-col">
+          <h3 class="text-lg font-bold">Single Rooftop</h3>
+          <p class="mt-1 text-sm text-slate-500">For one dealership location.</p>
+          <div class="mt-6 flex items-end gap-1"><span class="text-5xl font-extrabold tracking-tight">$1,490</span><span class="text-slate-400 mb-2">/mo</span></div>
+          <p class="text-xs text-slate-400">per store · billed monthly</p>
+          <ul class="mt-6 space-y-3 text-sm text-slate-600 flex-1">
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> AI iMessage on your branded business line</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Unlimited reps &amp; conversations</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Live inventory grounding + booking</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Human takeover (relay + iMessage group)</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Manager board &amp; analytics</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> White-glove setup included</li>
+          </ul>
+          <a href="book-demo.html" class="mt-7 inline-flex justify-center items-center gap-2 font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 ring-1 ring-brand-100 px-5 py-3 rounded-xl transition">Book a demo</a>
+        </div>
+
+        <!-- Pro (highlighted) -->
+        <div class="reveal rounded-3xl bg-ink-950 text-white shadow-glow p-8 flex flex-col relative overflow-hidden ring-1 ring-brand-500/40">
+          <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-brand-600/30 blur-3xl"></div>
+          <span class="self-start text-xs font-bold uppercase tracking-widest text-brand-300 bg-brand-500/15 ring-1 ring-brand-400/30 px-3 py-1 rounded-full">Most popular</span>
+          <h3 class="mt-4 text-lg font-bold">Rooftop Pro</h3>
+          <p class="mt-1 text-sm text-slate-400">Everything, plus growth engines.</p>
+          <div class="mt-6 flex items-end gap-1"><span class="text-5xl font-extrabold tracking-tight">$1,990</span><span class="text-slate-400 mb-2">/mo</span></div>
+          <p class="text-xs text-slate-500">per store · billed monthly</p>
+          <ul class="mt-6 space-y-3 text-sm text-slate-300 flex-1">
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> Everything in Single Rooftop</li>
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> Outbound reactivation campaigns</li>
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> Review &amp; referral engine</li>
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> Stock-alert automations</li>
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> CRM + DMS integrations</li>
+            <li class="flex gap-2"><span class="text-brand-400">✓</span> Priority support &amp; success manager</li>
+          </ul>
+          <a href="book-demo.html" class="mt-7 inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-500 px-5 py-3 rounded-xl shadow-soft transition">Book a demo</a>
+        </div>
+
+        <!-- Groups -->
+        <div class="reveal rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-8 flex flex-col">
+          <h3 class="text-lg font-bold">Dealer Group</h3>
+          <p class="mt-1 text-sm text-slate-500">Multi-rooftop &amp; auto groups.</p>
+          <div class="mt-6 flex items-end gap-1"><span class="text-5xl font-extrabold tracking-tight">Custom</span></div>
+          <p class="text-xs text-slate-400">volume pricing across stores</p>
+          <ul class="mt-6 space-y-3 text-sm text-slate-600 flex-1">
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Everything in Rooftop Pro, every store</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Group-level roll-up dashboards</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Cross-store routing &amp; shared inventory</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> SSO, roles &amp; audit logs</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Dedicated onboarding for each rooftop</li>
+            <li class="flex gap-2"><span class="text-brand-600">✓</span> Custom SLAs &amp; data residency</li>
+          </ul>
+          <a href="book-demo.html" class="mt-7 inline-flex justify-center items-center gap-2 font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 ring-1 ring-brand-100 px-5 py-3 rounded-xl transition">Talk to sales</a>
+        </div>
+      </div>
+      <p class="mt-6 text-center text-sm text-slate-400 reveal">Prices shown are placeholders — set your real tiers here. All plans include carrier &amp; iMessage provisioning, compliance tooling, and onboarding.</p>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- FAQ                                                        -->
+  <!-- ========================================================= -->
+  <section id="faq" class="bg-slate-50 py-20 lg:py-28 border-y border-slate-100">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <div class="text-center reveal">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">FAQ</p>
+        <h2 class="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight">The questions dealers actually ask.</h2>
+      </div>
+
+      <div class="mt-10 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft overflow-hidden reveal">
+        <!-- item -->
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">Is this compliant? What about STOP opt-outs and quiet hours?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">Yes. Textly is compliance-aware out of the box: sender ID identifies your dealership, every recipient can reply STOP to opt out instantly, and the AI respects quiet hours and consent windows. We handle carrier registration and keep an auditable log of consent and messages.</p>
+        </details>
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">Does it really use our own number?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">Each rooftop gets its own dedicated business line, and the contact shows your dealership name — not "Unknown Caller." Conversations live with the store, so when a rep leaves, the relationship and history stay with you.</p>
+        </details>
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">What about Android customers — do they get SMS?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">Yes. iPhone customers get rich iMessage (blue bubbles, typing indicators, group threads). Android and non-iMessage customers seamlessly fall back to SMS from the same number — no one slips through the cracks.</p>
+        </details>
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">How long does setup take?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">Most single rooftops are live within a few business days. We provision your line, connect your live inventory feed and CRM, tune the AI to your voice and process, and run a supervised pilot before it handles real leads on its own.</p>
+        </details>
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">Does it replace our BDC?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">No — it makes your BDC superhuman. The AI covers nights, weekends and the instant-response window your team can't, handles repetitive questions, and escalates hot, ready-to-buy leads to your people. Your closers spend their time closing, not chasing.</p>
+        </details>
+        <details class="faq group p-6 open:bg-slate-50/60">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-slate-800">Who owns the data and the conversations?
+            <span class="faq-ic ml-4 shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-500 transition-transform">+</span></summary>
+          <p class="mt-3 text-slate-600">You do. Every contact, conversation and outcome belongs to your dealership and is exportable at any time. The AI is grounded only in your live inventory and approved data, and never invents a vehicle, price, or promise.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- FINAL CTA                                                  -->
+  <!-- ========================================================= -->
+  <section class="relative bg-ink-950 text-white py-24 overflow-hidden">
+    <div class="absolute inset-0 grid-bg opacity-30"></div>
+    <div class="absolute inset-0 radial-glow"></div>
+    <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center reveal">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Stop losing deals to slow follow-up.</h2>
+      <p class="mt-4 text-lg text-slate-300">See Textly text a real lead, book a test drive, and hand it to a rep — live, on your own inventory. Or just call the AI yourself right now.</p>
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="book-demo.html" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-500 px-7 py-4 rounded-xl shadow-glow transition">
+          Book a demo <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="tel:+12492095699" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 px-7 py-4 rounded-xl transition">
+          <svg class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Text or call our AI: (249) 209-5699
+        </a>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- FOOTER                                                     -->
+  <!-- ========================================================= -->
+  <footer class="bg-ink-900 text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid md:grid-cols-5 gap-10">
+      <div class="md:col-span-2">
+        <a href="#top" class="flex items-center gap-2.5 font-extrabold text-lg text-white tracking-tight">
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.9 3 3 6.6 3 11c0 2.3 1.1 4.3 2.9 5.7-.1 1-.6 2.3-1.6 3.3 1.7-.1 3.2-.6 4.4-1.5 1 .3 2.1.5 3.3.5 5.1 0 9-3.6 9-8s-3.9-8.5-9-8.5z"/></svg>
+          </span>
+          Text<span class="text-brand-400">ly</span>
+        </a>
+        <p class="mt-4 text-sm max-w-xs">The AI iMessage assistant built for car dealerships. Text every lead back in seconds, book more appointments, and never lose a deal to slow follow-up.</p>
+        <a href="tel:+12492095699" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-300">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Text or call our AI: (249) 209-5699
+        </a>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-3">Product</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#features" class="hover:text-white">Features</a></li>
+          <li><a href="#how" class="hover:text-white">How it works</a></li>
+          <li><a href="#dashboard" class="hover:text-white">Dashboard</a></li>
+          <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-3">Company</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white">About</a></li>
+          <li><a href="#" class="hover:text-white">Customers</a></li>
+          <li><a href="#" class="hover:text-white">Careers</a></li>
+          <li><a href="book-demo.html" class="hover:text-white">Contact sales</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold text-sm mb-3">Legal &amp; compliance</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white">Privacy</a></li>
+          <li><a href="#" class="hover:text-white">Terms</a></li>
+          <li><a href="#" class="hover:text-white">Messaging policy</a></li>
+          <li><a href="#" class="hover:text-white">Data ownership</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <p>© 2026 Textly · textly.ca — All rights reserved. Reply STOP to opt out of any message.</p>
+        <p>Made for dealerships who hate losing leads.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- per-mockup keypad style -->
+  <style>
+    .dp { aspect-ratio:1; border-radius:9999px; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:600; font-size:18px; color:#0f172a; line-height:1; }
+    .dp small { font-size:8px; letter-spacing:1px; color:#94a3b8; font-weight:700; }
+  </style>
+
+  <!-- ========================================================= -->
+  <!-- JS — nav, mobile menu, scroll reveal, FAQ icons            -->
+  <!-- ========================================================= -->
+  <script>
+    // mobile menu toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn?.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    mobileMenu?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+    // nav shadow on scroll
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('shadow-soft', window.scrollY > 8);
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+
+    // scroll reveal
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // FAQ +/- icon
+    document.querySelectorAll('details.faq').forEach(d => {
+      d.addEventListener('toggle', () => {
+        const ic = d.querySelector('.faq-ic');
+        ic.textContent = d.open ? '–' : '+';
+        ic.classList.toggle('rotate-180', d.open);
+        ic.classList.toggle('bg-brand-600', d.open);
+        ic.classList.toggle('text-white', d.open);
+      });
+    });
+
+    /* ============================================================
+       DASHBOARD: make it "come alive" when it scrolls into view
+       — numbers count up, bars grow, pills stagger, donut sweeps,
+         and the live conversation types itself in.
+    ============================================================ */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Count any [data-count] element up from 0 to its target with easing.
+    function countUp(el, ms = 1400) {
+      const target = parseFloat(el.dataset.count || '0');
+      const suffix = el.dataset.suffix || '';
+      if (reduceMotion) { el.textContent = target + suffix; return; }
+      const start = performance.now();
+      const ease = t => 1 - Math.pow(1 - t, 3); // easeOutCubic
+      (function tick(now){
+        const p = Math.min((now - start) / ms, 1);
+        el.textContent = Math.round(target * ease(p)) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      })(start);
+    }
+
+    const dash = document.getElementById('dashboard');
+    if (dash) {
+      const dashIO = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          dashIO.unobserve(e.target);
+          dash.classList.add('dash-in');                       // fires bar + pill CSS transitions
+          dash.querySelectorAll('.cu').forEach(el => countUp(el)); // count every number up
+          const arc = document.getElementById('donutArc');     // sweep the donut to 82%
+          if (arc) requestAnimationFrame(() => arc.setAttribute('stroke-dasharray', '82 100'));
+          playConversation();                                  // start the live thread
+        });
+      }, { threshold: 0.3 });
+      dashIO.observe(dash);
+    }
+
+    // Live-thread conversation player: reveal bubbles one-by-one, with a
+    // typing indicator before each, then loop.
+    function playConversation() {
+      const thread = document.getElementById('liveThread');
+      const typing = document.getElementById('liveTyping');
+      if (!thread) return;
+      const msgs = [...thread.querySelectorAll('.chat-msg')];
+      if (reduceMotion) { msgs.forEach(m => m.classList.add('show')); return; }
+
+      let i = 0;
+      const showNext = () => {
+        if (i >= msgs.length) {                 // pause, then replay
+          setTimeout(() => {
+            msgs.forEach(m => m.classList.remove('show'));
+            i = 0; setTimeout(showNext, 600);
+          }, 3200);
+          return;
+        }
+        const msg = msgs[i];
+        const incoming = msg.classList.contains('bubble-in');
+        // show typing bubble briefly (aligned to whoever is "typing")
+        typing.classList.remove('hidden');
+        typing.classList.toggle('self-start', incoming);
+        typing.classList.toggle('self-end', !incoming);
+        typing.querySelector('.typing').className = 'typing';
+        setTimeout(() => {
+          typing.classList.add('hidden');
+          msg.classList.add('show');
+          i++;
+          setTimeout(showNext, 750);
+        }, 850);
+      };
+      showNext();
+    }
+  </script>
+</body>
+</html>

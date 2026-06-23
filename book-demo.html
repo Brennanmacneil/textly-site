@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a demo — Textly</title>
+  <meta name="description" content="See Textly text a real lead and book a test drive on your own inventory. Book a 20-minute demo, or call the AI right now at (249) 209-5699." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','-apple-system','Segoe UI','Roboto','sans-serif'] },
+      colors: {
+        brand: {50:'#eef4ff',100:'#dbe6ff',200:'#bccfff',300:'#8eabff',400:'#5b7cff',500:'#2f6bff',600:'#1d52f0',700:'#1740cc',800:'#1736a3',900:'#193380'},
+        forest: { 800:'#1e3d32' }, ink: { 950:'#070b16', 900:'#0a1020' }
+      },
+      boxShadow: { soft:'0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06)', glow:'0 0 0 1px rgba(47,107,255,.25), 0 20px 60px -10px rgba(29,82,240,.45)' }
+    }}}
+  </script>
+  <style> html{scroll-behavior:smooth} body{-webkit-font-smoothing:antialiased}
+    .radial-glow{background:radial-gradient(60% 60% at 50% 0%, rgba(47,107,255,.28), transparent 70%)}
+    .grid-bg{background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px}
+  </style>
+</head>
+<body class="font-sans text-slate-900 bg-white">
+
+  <!-- top call banner -->
+  <div class="w-full bg-forest-800 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-center gap-3 py-2.5 text-[13px] sm:text-sm font-medium">
+        <span class="hidden sm:inline text-emerald-200/80">Don't want to wait? Talk to the AI now —</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <strong class="font-bold">Text or Call Our AI: <a href="tel:+12492095699" class="hover:underline">(249) 209-5699</a></strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- minimal nav -->
+  <header class="border-b border-slate-100">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2.5 font-extrabold text-lg tracking-tight">
+        <span class="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.9 3 3 6.6 3 11c0 2.3 1.1 4.3 2.9 5.7-.1 1-.6 2.3-1.6 3.3 1.7-.1 3.2-.6 4.4-1.5 1 .3 2.1.5 3.3.5 5.1 0 9-3.6 9-8s-3.9-8.5-9-8.5z"/></svg>
+        </span>
+        Text<span class="text-brand-600">ly</span>
+      </a>
+      <a href="index.html" class="text-sm font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Back to site
+      </a>
+    </nav>
+  </header>
+
+  <main class="grid lg:grid-cols-2 min-h-[calc(100vh-105px)]">
+
+    <!-- LEFT: pitch (dark) -->
+    <section class="relative bg-ink-950 text-white px-6 sm:px-10 lg:px-16 py-14 lg:py-20 overflow-hidden">
+      <div class="absolute inset-0 grid-bg opacity-30"></div>
+      <div class="absolute inset-0 radial-glow"></div>
+      <div class="relative max-w-md">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-300 bg-brand-500/10 ring-1 ring-brand-400/20 px-3 py-1.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 20-minute live demo
+        </span>
+        <h1 class="mt-5 text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">See Textly book a test drive on <span class="text-brand-400">your</span> inventory.</h1>
+        <p class="mt-4 text-slate-300">We'll text a real lead live, show the AI ↔ human handoff, and walk your manager board — no slideware. Bring a phone; you'll watch the blue bubbles fly.</p>
+
+        <ul class="mt-8 space-y-4 text-slate-200">
+          <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-6 h-6 grid place-items-center rounded-full bg-brand-600 text-white"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> See real iMessage replies grounded in live inventory</li>
+          <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-6 h-6 grid place-items-center rounded-full bg-brand-600 text-white"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Watch a rep take over a hot lead mid-conversation</li>
+          <li class="flex gap-3"><span class="mt-0.5 shrink-0 w-6 h-6 grid place-items-center rounded-full bg-brand-600 text-white"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Get a straight answer on pricing, setup &amp; compliance</li>
+        </ul>
+
+        <div class="mt-10 p-5 rounded-2xl bg-white/5 ring-1 ring-white/10">
+          <p class="text-sm text-slate-300">Prefer to just try it?</p>
+          <a href="tel:+12492095699" class="mt-2 inline-flex items-center gap-2 text-lg font-bold text-white">
+            <svg class="w-5 h-5 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Text or call our AI: (249) 209-5699
+          </a>
+          <p class="mt-1 text-xs text-slate-400">It'll answer questions and book you a slot — that's the product talking.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: form -->
+    <section class="px-6 sm:px-10 lg:px-16 py-14 lg:py-20 bg-slate-50">
+      <div class="max-w-md mx-auto">
+        <h2 class="text-2xl font-extrabold tracking-tight">Book your demo</h2>
+        <p class="mt-1 text-slate-500 text-sm">We'll reach out within one business day to lock a time.</p>
+
+        <form id="demoForm" class="mt-7 space-y-4" novalidate>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1.5">First name</label>
+              <input required name="first" type="text" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Chris" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1.5">Last name</label>
+              <input required name="last" type="text" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Bennett" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1.5">Work email</label>
+            <input required name="email" type="email" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="chris@yourdealership.com" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1.5">Mobile (so the AI can text you)</label>
+            <input required name="phone" type="tel" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="(905) 555-0199" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1.5">Dealership</label>
+            <input required name="dealer" type="text" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Maple Honda" />
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1.5">Your role</label>
+              <select name="role" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <option>Dealer Principal / Owner</option>
+                <option>General Manager</option>
+                <option>Sales Manager</option>
+                <option>BDC Manager</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1.5">Rooftops</label>
+              <select name="rooftops" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <option>1 store</option>
+                <option>2–5 stores</option>
+                <option>6–15 stores</option>
+                <option>16+ stores</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-700 px-6 py-3.5 rounded-xl shadow-soft transition">
+            Request my demo
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <p class="text-xs text-slate-400 text-center">By submitting you agree to be contacted about Textly. Message &amp; data rates may apply. Reply STOP to opt out.</p>
+        </form>
+
+        <!-- success -->
+        <div id="success" class="hidden mt-7 rounded-2xl bg-white ring-1 ring-emerald-100 shadow-soft p-6 text-center">
+          <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 grid place-items-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="mt-3 text-lg font-bold">You're on the list 🎉</h3>
+          <p class="mt-1 text-sm text-slate-500">We'll reach out within one business day. Want a head start? Call the AI now at <a href="tel:+12492095699" class="font-semibold text-brand-600">(249) 209-5699</a>.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Front-end demo only — wire this to your CRM / form backend (e.g. HubSpot, Salesforce, a serverless endpoint).
+    const form = document.getElementById('demoForm');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      form.classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

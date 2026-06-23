@@ -1,0 +1,8 @@
+# Local dev / preview only
+.claude/
+.DS_Store
+
+# Source assets that shouldn't ship
+*.mov
+*.mp4
+Screenshot*.png
