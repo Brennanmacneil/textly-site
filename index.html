@@ -710,12 +710,14 @@ curl -X POST https://api.textly.ca/v1/messages \
       <div class="mt-12 grid lg:grid-cols-12 gap-6">
 
         <!-- live conversation card -->
-        <div class="reveal lg:col-span-3 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5">
-          <div class="flex items-center justify-between mb-3">
+        <div class="reveal lg:col-span-3 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3 shrink-0">
             <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Live thread</span>
             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> AI handling</span>
           </div>
-          <div id="liveThread" class="flex flex-col gap-2 min-h-[190px]">
+          <!-- flex-1 + overflow-hidden + justify-end: bubbles fill from the bottom and the
+               card height NEVER changes as messages or the typing indicator appear/disappear -->
+          <div id="liveThread" class="flex-1 min-h-[260px] overflow-hidden flex flex-col gap-2 justify-end">
             <div class="chat-msg bubble bubble-in" style="font-size:12.5px">I'll wait if it's not too long</div>
             <div class="chat-msg bubble bubble-out" style="font-size:12.5px">Usually about 45 min. Wednesday 10am or Thursday 3pm?</div>
             <div class="chat-msg bubble bubble-in" style="font-size:12.5px">Wednesday works perfectly</div>
@@ -1138,15 +1140,44 @@ curl -X POST https://api.textly.ca/v1/messages \
 
     const dash = document.getElementById('dashboard');
     if (dash) {
+      const arc = document.getElementById('donutArc');
+      const bars = [...dash.querySelectorAll('.bar-fill')];
+      // remember each bar's target fill (the dimension it animates) so we can reset + refill on a loop
+      bars.forEach(b => {
+        if (b.style.width)  { b.dataset.dim = 'width';  b.dataset.val = b.style.width; }
+        else if (b.style.height) { b.dataset.dim = 'height'; b.dataset.val = b.style.height; }
+      });
+
+      // One full "the board fills up" cycle: numbers count, bars + % fill, donut sweeps.
+      // (briefly disabling the transition guarantees it replays from 0 every cycle)
+      function runDashCycle() {
+        dash.querySelectorAll('.cu').forEach(el => { el.textContent = '0'; countUp(el); });
+        bars.forEach(b => {
+          if (!b.dataset.dim) return;
+          b.style.transition = 'none';
+          b.style[b.dataset.dim] = '0';              // snap to empty
+          void b.offsetWidth;                        // commit it
+          b.style.transition = '';                   // restore CSS transition
+          b.style[b.dataset.dim] = b.dataset.val;    // fill back to target
+        });
+        if (arc) {
+          arc.style.transition = 'none';
+          arc.setAttribute('stroke-dasharray', '0 100');
+          void arc.getBoundingClientRect();
+          arc.style.transition = 'stroke-dasharray 1.3s cubic-bezier(.16,1,.3,1)';
+          arc.setAttribute('stroke-dasharray', '82 100');
+        }
+      }
+
       const dashIO = new IntersectionObserver((entries) => {
         entries.forEach(e => {
           if (!e.isIntersecting) return;
           dashIO.unobserve(e.target);
-          dash.classList.add('dash-in');                       // fires bar + pill CSS transitions
-          dash.querySelectorAll('.cu').forEach(el => countUp(el)); // count every number up
-          const arc = document.getElementById('donutArc');     // sweep the donut to 82%
-          if (arc) requestAnimationFrame(() => arc.setAttribute('stroke-dasharray', '82 100'));
-          playConversation();                                  // start the live thread
+          dash.classList.add('dash-in');   // pills stagger in (once)
+          runDashCycle();                  // first fill
+          playConversation();              // start the live thread
+          // keep the board feeling live: re-fill the numbers, bars, % and donut on a loop
+          if (!reduceMotion) setInterval(runDashCycle, 7000);
         });
       }, { threshold: 0.3 });
       dashIO.observe(dash);
