@@ -95,6 +95,8 @@
     /* Conversation bubbles: each pops in when JS adds .show */
     #liveThread .chat-msg { opacity: 0; transform: translateY(8px) scale(.96); transition: opacity .35s, transform .35s cubic-bezier(.16,1,.3,1); }
     #liveThread .chat-msg.show { opacity: 1; transform: none; }
+    /* not-yet-revealed messages take NO space (real chat) - so nothing reserves a gap */
+    #liveThread .chat-msg.tucked { display: none; }
 
     /* Escalation feed: viewport fade mask + upward-scrolling track */
     .feed-mask { -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
@@ -1194,11 +1196,14 @@ curl -X POST https://api.textly.ca/v1/messages \
       const msgs = [...thread.querySelectorAll('.chat-msg')];
       if (reduceMotion) { msgs.forEach(m => m.classList.add('show')); return; }
 
+      // start with every message tucked away (no space) so the thread fills from the bottom
+      msgs.forEach(m => { m.classList.add('tucked'); m.classList.remove('show'); });
+
       let i = 0;
       const showNext = () => {
         if (i >= msgs.length) {                 // pause, then replay
           setTimeout(() => {
-            msgs.forEach(m => m.classList.remove('show'));
+            msgs.forEach(m => { m.classList.remove('show'); m.classList.add('tucked'); });
             i = 0; setTimeout(showNext, 600);
           }, 3200);
           return;
@@ -1212,6 +1217,8 @@ curl -X POST https://api.textly.ca/v1/messages \
         typing.querySelector('.typing').className = 'typing';
         setTimeout(() => {
           typing.classList.add('hidden');
+          msg.classList.remove('tucked');   // give it space
+          void msg.offsetWidth;             // commit, so the pop-in animation plays
           msg.classList.add('show');
           i++;
           setTimeout(showNext, 750);
