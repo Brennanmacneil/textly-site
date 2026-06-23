@@ -710,14 +710,16 @@ curl -X POST https://api.textly.ca/v1/messages \
       <div class="mt-12 grid lg:grid-cols-12 gap-6">
 
         <!-- live conversation card -->
-        <div class="reveal lg:col-span-3 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5 flex flex-col">
+        <div class="reveal lg:col-span-3 rounded-3xl bg-white ring-1 ring-slate-200 shadow-soft p-5 flex flex-col min-h-[320px]">
           <div class="flex items-center justify-between mb-3 shrink-0">
             <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Live thread</span>
             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> AI handling</span>
           </div>
-          <!-- flex-1 + overflow-hidden + justify-end: bubbles fill from the bottom and the
-               card height NEVER changes as messages or the typing indicator appear/disappear -->
-          <div id="liveThread" class="flex-1 min-h-[260px] overflow-hidden flex flex-col gap-2 justify-end">
+          <!-- flex-1 + min-h-0 + overflow-hidden + justify-end: the messages area absorbs the
+               card height and CLIPS overflow, so the card never resizes as bubbles or the
+               typing indicator appear/disappear. (min-h-0 is what allows the clip; the card
+               carries min-h-[320px] so it never collapses on mobile where it isn't stretched.) -->
+          <div id="liveThread" class="flex-1 min-h-0 overflow-hidden flex flex-col gap-2 justify-end">
             <div class="chat-msg bubble bubble-in" style="font-size:12.5px">I'll wait if it's not too long</div>
             <div class="chat-msg bubble bubble-out" style="font-size:12.5px">Usually about 45 min. Wednesday 10am or Thursday 3pm?</div>
             <div class="chat-msg bubble bubble-in" style="font-size:12.5px">Wednesday works perfectly</div>
