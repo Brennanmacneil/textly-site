@@ -199,7 +199,188 @@
   <main id="top">
 
   <!-- ========================================================= -->
-  <!-- HERO (dark)                                                -->
+  <!-- STAGE — scroll-choreographed Tommy intro (app-like)        -->
+  <!-- Tommy flies/scales/blinks across giant lowercase phrases.  -->
+  <!-- ========================================================= -->
+  <style>
+    #stage{ position:relative; height:440vh; background:#070b16; color:#fff; }
+    #stage .pin{ position:sticky; top:0; height:100svh; overflow:hidden; }
+    #stage .scene{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      text-align:center; padding:0 1.25rem; opacity:0; will-change:opacity,transform; z-index:10; pointer-events:none; }
+    #stage .scene h2{ font-weight:900; letter-spacing:-.045em; line-height:.88; font-size:clamp(2.4rem,8.4vw,6rem); }
+    #stage .scene p{ margin-top:1.1rem; color:#cbd5e1; font-weight:500; font-size:clamp(1rem,2.2vw,1.25rem); }
+    #stageTommyWrap{ position:absolute; left:50%; top:47%; transform:translate(-50%,-50%); z-index:15; }
+    #stageTommy{ will-change:transform; }
+    #stageTommy .bob{ animation:stgFloat 3.6s ease-in-out infinite; will-change:transform; }
+    @keyframes stgFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
+    #stage .stage-lid{ transform-box:fill-box; transform-origin:center; transform:scaleY(0); transition:transform .09s ease; }
+    #stageTommy.blink .stage-lid{ transform:scaleY(1); }
+    #stageDots span{ display:block; width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.22); transition:all .3s; }
+    #stageDots span.on{ background:#5b8bff; transform:scale(1.4); }
+    #scrollHint{ transition:opacity .4s; }
+    @media (prefers-reduced-motion:reduce){
+      #stage{ height:auto } #stage .pin{ position:relative; height:auto; padding:7rem 0 } #stageTommy .bob{ animation:none }
+    }
+  </style>
+
+  <section id="stage" aria-label="Meet Tommy">
+    <div class="pin">
+      <div class="absolute inset-0 grid-bg opacity-25"></div>
+      <div class="absolute inset-0 radial-glow"></div>
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[42rem] h-[42rem] rounded-full bg-brand-600/25 blur-3xl"></div>
+
+      <!-- Big Tommy (scroll-driven) -->
+      <div id="stageTommyWrap">
+        <div id="stageTommy">
+          <div class="bob">
+            <svg style="width:clamp(180px,29vw,300px);height:auto;display:block" viewBox="0 0 100 108" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="stgBody" x1="30" y1="6" x2="74" y2="104" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#6f99ff"/><stop offset=".5" stop-color="#2f6bff"/><stop offset="1" stop-color="#1740cc"/>
+                </linearGradient>
+                <radialGradient id="stgGloss" cx="50%" cy="20%" r="55%">
+                  <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <ellipse cx="50" cy="104" rx="27" ry="4.5" fill="#1740cc" opacity=".22"/>
+              <rect x="38" y="92" width="4" height="9" rx="2" fill="#1740cc"/>
+              <rect x="58" y="92" width="4" height="9" rx="2" fill="#1740cc"/>
+              <rect x="9" y="4" width="82" height="92" rx="30" fill="url(#stgBody)"/>
+              <rect x="9" y="4" width="82" height="92" rx="30" fill="url(#stgGloss)"/>
+              <ellipse cx="68" cy="22" rx="13" ry="9" fill="#fff" opacity=".32"/>
+              <ellipse cx="38" cy="50" rx="14.5" ry="15.5" fill="#fff"/>
+              <ellipse cx="64" cy="50" rx="14.5" ry="15.5" fill="#fff"/>
+              <g id="stagePupils">
+                <circle cx="38" cy="52" r="6.4" fill="#0b1020"/><circle cx="64" cy="52" r="6.4" fill="#0b1020"/>
+                <circle cx="40" cy="49.5" r="1.9" fill="#fff"/><circle cx="66" cy="49.5" r="1.9" fill="#fff"/>
+              </g>
+              <rect class="stage-lid" x="23.5" y="34.5" width="29" height="31" rx="14.5" fill="url(#stgBody)"/>
+              <rect class="stage-lid" x="49.5" y="34.5" width="29" height="31" rx="14.5" fill="url(#stgBody)"/>
+              <path id="stageMouth" d="M42 75 q8 7 16 0" fill="none" stroke="#0b1020" stroke-width="2.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenes (crossfade) -->
+      <div class="scene" data-scene="0"><div><h2>meet tommy.</h2><p>your dealership's AI - living in real iMessage.</p></div></div>
+      <div class="scene" data-scene="1"><h2>he texts every lead back.<br><span class="gradient-text">in seconds.</span></h2></div>
+      <div class="scene" data-scene="2"><h2>he never makes up a car.<br>or a price. ever.</h2></div>
+      <div class="scene" data-scene="3"><h2>he books the test drive<br>while you're asleep.</h2></div>
+      <div class="scene" id="stageCta" data-scene="4">
+        <div>
+          <h2>he's your whole BDC.<br><span class="gradient-text">awake at 2am.</span></h2>
+          <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="book-demo.html" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-500 px-7 py-3.5 rounded-xl shadow-glow transition">
+              book a demo
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="tel:+12492095699" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 px-7 py-3.5 rounded-xl transition">
+              <svg class="w-4 h-4 text-brand-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              text or call him: (249) 209-5699
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- scene dots -->
+      <div id="stageDots" class="absolute right-5 top-1/2 -translate-y-1/2 flex flex-col gap-2.5 z-20">
+        <span class="on"></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <!-- scroll hint -->
+      <div id="scrollHint" class="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-xs font-medium text-slate-400">
+        scroll to meet him
+        <svg class="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    const stage = document.getElementById('stage'); if (!stage) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tommy  = document.getElementById('stageTommy');
+    const pupils = document.getElementById('stagePupils');
+    const scenes = [...stage.querySelectorAll('.scene')];
+    const dots   = [...document.querySelectorAll('#stageDots span')];
+    const cta    = document.getElementById('stageCta');
+    const hint   = document.getElementById('scrollHint');
+    const N = scenes.length;
+    const getFlyer = () => document.getElementById('tommy'); // parsed later in the body, so look it up lazily
+
+    if (reduce) {                         // static fallback: just show the value-prop + CTA
+      scenes.forEach((s,i)=>{ s.style.opacity = i===N-1 ? 1 : 0; s.style.position = i===N-1?'static':'absolute'; });
+      cta.style.pointerEvents = 'auto';
+      const fl = getFlyer(); if (fl) fl.style.display = '';
+      return;
+    }
+
+    // Tommy flight keyframes across scroll progress p (0..1): x in vw, y in vh
+    const K = [
+      {p:0,    x:0,   y:0,  r:0,   s:1.00},
+      {p:0.25, x:-20, y:-3, r:-10, s:1.12},
+      {p:0.50, x:18,  y:3,  r:12,  s:1.30},
+      {p:0.75, x:-12, y:-6, r:-7,  s:1.10},
+      {p:1,    x:0,   y:-14,r:0,   s:0.82}
+    ];
+    const lerp = (a,b,t)=>a+(b-a)*t;
+    const smooth = t => t<=0?0 : t>=1?1 : t*t*(3-2*t);
+    function flightAt(p){
+      let i=0; while(i<K.length-1 && p>K[i+1].p) i++;
+      const a=K[i], b=K[Math.min(i+1,K.length-1)];
+      const t = b.p>a.p ? (p-a.p)/(b.p-a.p) : 0;
+      return { x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t), r:lerp(a.r,b.r,t), s:lerp(a.s,b.s,t) };
+    }
+
+    let ticking=false;
+    function render(){
+      const range = stage.offsetHeight - window.innerHeight;
+      const p = Math.min(Math.max((window.scrollY - stage.offsetTop) / (range||1), 0), 1);
+      const k = flightAt(p);
+      tommy.style.transform = `translate(${k.x.toFixed(2)}vw, ${k.y.toFixed(2)}vh) rotate(${k.r.toFixed(2)}deg) scale(${k.s.toFixed(3)})`;
+      const seg = 1/(N-1);                       // scene i is fully shown at p = i*seg (0 at top … 1 at bottom)
+      scenes.forEach((s,i)=>{
+        const c = i*seg;
+        const o = smooth(1 - Math.abs(p-c)/(seg*0.62));
+        s.style.opacity = o.toFixed(3);
+        s.style.transform = `translateY(${(((p-c)/seg)*-24).toFixed(1)}px)`;
+      });
+      const active = Math.round(p*(N-1));
+      dots.forEach((d,i)=> d.classList.toggle('on', i===active));
+      cta.style.pointerEvents = active===N-1 ? 'auto' : 'none';
+      if (hint) hint.style.opacity = p<0.035 ? 1 : 0;
+      const fl = getFlyer(); if (fl) fl.style.display = p>=0.999 ? '' : 'none';   // avoid two Tommys during the intro
+      ticking=false;
+    }
+    window.addEventListener('scroll', ()=>{ if(!ticking){ ticking=true; requestAnimationFrame(render); } }, {passive:true});
+    window.addEventListener('resize', render);
+    window.addEventListener('load', render);   // re-run once the flyer Tommy exists so it hides during the intro
+    render();
+
+    // eyes follow cursor (idle glances on touch)
+    let tpx=0,tpy=0,cpx=0,cpy=0;
+    if (matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove', e=>{
+        const r=tommy.getBoundingClientRect();
+        const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height*0.46), d=Math.hypot(dx,dy)||1;
+        const max=4.5; tpx=dx/d*Math.min(max,d/45); tpy=dy/d*Math.min(max,d/45);
+      }, {passive:true});
+    } else { setInterval(()=>{ tpx=(Math.random()*2-1)*4; tpy=(Math.random()*2-1)*2; }, 1900); }
+    (function eye(){ cpx+=(tpx-cpx)*.15; cpy+=(tpy-cpy)*.15;
+      if(pupils) pupils.style.transform=`translate(${cpx.toFixed(2)}px, ${cpy.toFixed(2)}px)`;
+      requestAnimationFrame(eye);
+    })();
+
+    // blink
+    (function blink(){ tommy.classList.add('blink'); setTimeout(()=>tommy.classList.remove('blink'),120);
+      setTimeout(blink, 2400 + Math.random()*3200);
+    })();
+  })();
+  </script>
+
+  <!-- ========================================================= -->
+  <!-- HERO (dark) - now the product "proof" after the stage      -->
   <!-- ========================================================= -->
   <section class="relative overflow-hidden bg-ink-950 text-white">
     <div class="absolute inset-0 grid-bg opacity-40"></div>
@@ -240,17 +421,17 @@
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-2 gap-12 items-center">
       <!-- copy -->
       <div class="reveal">
-        <span class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase text-brand-300 bg-brand-500/10 ring-1 ring-brand-400/20 px-3 py-1.5 rounded-full">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-brand-300 bg-brand-500/10 ring-1 ring-brand-400/20 px-3 py-1.5 rounded-full">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          AI iMessage for car dealerships
+          watch tommy work
         </span>
-        <h1 class="mt-5 text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.93] tracking-[-0.035em]">
-          Text every lead back in <span class="gradient-text">seconds</span> - over real iMessage.
+        <h1 class="mt-5 text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] tracking-[-0.03em]">
+          here's a real lead - <span class="gradient-text">and tommy on it.</span>
         </h1>
         <p class="mt-5 text-lg text-slate-300 max-w-xl">
-          Textly is your dealership's AI assistant. It answers every inbound from your
-          business number with real blue bubbles, books test drives and service 24/7,
-          and hands the hot ones to your team - grounded only in your live inventory.
+          He answers every inbound from your business number with real blue bubbles,
+          books test drives and service 24/7, and hands the hot ones to your team -
+          grounded only in your live inventory. He never makes up a car or a price.
         </p>
         <div class="mt-8 flex flex-col sm:flex-row gap-3">
           <a href="book-demo.html" class="inline-flex justify-center items-center gap-2 font-semibold text-white bg-brand-600 hover:bg-brand-500 px-6 py-3.5 rounded-xl shadow-glow transition">
